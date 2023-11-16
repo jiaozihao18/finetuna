@@ -29,7 +29,7 @@ class NEBcalc:
         self.starting_images = copy.deepcopy(starting_images)
         self.intermediate_samples = intermediate_samples
 
-    def run(self, calc, filename):
+    def run(self, calc, filename, fmax):
         """
         Runs NEB calculations.
         Parameters
@@ -48,10 +48,10 @@ class NEBcalc:
         qn = BFGS(
             ml_initial, trajectory="initial.traj", logfile="initial_relax_log.txt"
         )
-        qn.run(fmax=0.01, steps=100)
+        qn.run(fmax=fmax)
         print("BUILDING FINAL")
         qn = BFGS(ml_final, trajectory="final.traj", logfile="final_relax_log.txt")
-        qn.run(fmax=0.01, steps=100)
+        qn.run(fmax=fmax)
         initial = ml_initial.copy()
         final = ml_final.copy()
 
@@ -67,10 +67,10 @@ class NEBcalc:
 
         print("NEB BEING BUILT")
         neb = SingleCalculatorNEB(images)
-        neb.interpolate()
+        neb.interpolate(mic=True)
         print("NEB BEING OPTIMISED")
         opti = BFGS(neb, trajectory=filename + ".traj", logfile="al_neb_log.txt")
-        opti.run(fmax=0.01, steps=100)
+        opti.run(fmax=fmax)
         print("NEB DONE")
 
     def get_trajectory(self, filename):
