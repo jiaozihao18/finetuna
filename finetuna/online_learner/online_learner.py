@@ -25,6 +25,7 @@ class OnlineLearner(Calculator):
         parent_calc,
         mongo_db=None,
         optional_config=None,
+        save_every = None,
     ):
         Calculator.__init__(self)
         self.parent_calc = parent_calc
@@ -37,6 +38,7 @@ class OnlineLearner(Calculator):
         self.trained_at_least_once = False
         self.check_final_point = False
         self.uncertainty_history = []
+        self.save_every = save_every
 
         print("Parent calc is :", self.parent_calc)
         self.parent_calc_pausable = False
@@ -186,6 +188,14 @@ class OnlineLearner(Calculator):
         Calculator.calculate(self, atoms, properties, system_changes)
         self.curr_step += 1
         self.steps_since_last_query += 1
+        
+        if self.save_every and self.curr_step % self.save_every == 0:
+            # save checkpoints file
+            print("save checkpoint at step %s"%self.curr_step)
+            self.ml_potential.trainer.is_debug=False
+            self.ml_potential.trainer.config["cmd"]["checkpoint_dir"] = os.getcwd()
+            self.ml_potential.trainer.save(checkpoint_file="checkpoint.pt", training_state=True)
+            self.ml_potential.trainer.is_debug=True
 
         energy, forces, fmax = self.get_energy_and_forces(atoms)
         self.results["energy"] = energy
